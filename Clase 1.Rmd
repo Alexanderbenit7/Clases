@@ -1,0 +1,138 @@
+
+##### 1. MANIPULACIÓN DE DATOS:
+
+Vamos a crear una pequeña bas de datos para ver el tema de horas, minutos y diferencias de fechas en caso llegaran a tomar algo así:
+
+```{r}
+a <- c(1:6)
+b <- c("05/12/2012 05:00","05/12/2012 06:55","05/12/2012 07:10",
+       "05/12/2012 10:23", "05/12/2012 11:43","05/12/2012 13:04")
+c <- c("25/12/2012","05/12/2013","05/12/2014",
+       "05/12/2015", "06/12/2012","13/01/2016")
+d <-c("0","0","0","1","1","1")
+f <- c("10:00","11:24","12:44",
+       "12:55","17:00","15:33")
+df1 <- data.frame(a,b,c,d,f,stringsAsFactors = FALSE)
+```
+
+Veamos la data:
+
+```{r}
+head(df1)
+```
+Qué pasa si queremos separar la columna "b" en dos, en una solo las fechas, y en la otra solo las horas: con la función substr puedes manipular elementos dentro de una celda. Los eliminas o los pasas a otras columnas.
+
+```{r}
+#Solo las horas:
+df1$b_2 = substr(df1$b,12,18)
+#Solo las fechas:
+df1$b = substr(df1$b, 1,10)
+```
+
+Si vemos cómo está medida nuestra data, nos damos cuenta que está en formato texto. Para poder jugar con las diferencias entre fecha, horas, minutos, necesitamos darle formato:
+
+```{r}
+str(df1)
+```
+
+Primero veamos las fechas. Si volvemos a correr el código anterior, veremos que ya está en formato fecha. Ojo con los / o los -, esto va a depender de cómo esté puesta la información en la base de datos. Explicar: https://www.statmethods.net/input/dates.html
+
+```{r}
+df1$b=as.Date(df1$b, format = "%d/%m/%Y", origin = "", tz = "")
+df1$c=as.Date(df1$c, format = "%d/%m/%Y", origin = "", tz = "")
+```
+
+Qué pasaría si queremos ver la diferencia de días, semanas, meses o años entre la columna B y la columna C:
+
+```{r}
+library(lubridate)
+df1$diff_days=interval(df1$b,df1$c) %/% days(1)
+df1$diff_weeks=interval(df1$b,df1$c) %/% weeks(1)
+df1$diff_months=interval(df1$b,df1$c) %/% months(1)
+df1$diff_years=interval(df1$b,df1$c) %/% years(1)
+```
+
+Con eso ya tenemos las diferencias en columnas:
+
+```{r}
+head(df1)
+```
+¿Y si nos preguntan por la fecha actual y la diferencia? Agregamos la columna y repetimos el ejercicio:
+
+```{r}
+df1$act_date = as.Date("2021-07-17", format = "%Y-%m-%d", origin = "", tz = "")
+```
+
+Códigos importantes: de paso que le damos orden a nuestra base:
+
+Creemos dos bases: una con las horas y la otra con la información de las fechas
+
+```{r}
+#Veamos los nombres por aquí:
+names(df1)
+```
+
+```{r}
+#Para crear subsets: a la izquierda las filas, a la derecha las columnas.
+dates = df1[,c(1:4,7:11)]
+hours = df1[,c(1,4:6)]
+```
+
+Vamos ahora con las horas y las diferencias: va a agregar una fecha, la de hoy, pero la ignoramos:
+
+```{r}
+hours$f = as.POSIXct(hours$f, tz = "", format = "%H:%M", usetz = FALSE)
+hours$b_2 = as.POSIXct(hours$b_2, tz = "", format = "%H:%M", usetz = FALSE)
+```
+
+Sacamos las diferencia de horas y minutos:
+
+```{r}
+hours$diff_minutes=interval(hours$b_2,hours$f) %/% minutes(1)
+hours$diff_hours=interval(hours$b_2,hours$f) %/% hours(1)
+```
+
+```{r}
+head(hours)
+```
+
+*Ejercicio*: 
+
+1. Sacar la diferencia en años, meses, semanas y días con respecto al día de hoy (act_date). Utilizar el objeto *dates*
+
+2. Vamos a agregar una columna al objeto *hours*: yo creo el objeto df2. Junta df2 y df1 en df1 con la función "merge". Saquemos las diferencias de horas, minutos y segundos.
+
+```{r}
+a = c(1:6)
+z<- c("06:00:25","08:56:17","13:10:02",
+       "10:23:19", "18:43:55","15:04:22")
+df2 <- data.frame(a,z,stringsAsFactors = FALSE)
+```
+
+
+3. Pruebas bivariadas
+
+Vamos a trabajar con la data del Barómetro de las Américas:
+
+```{r base}
+library(rio)
+lapop18 <- import("https://raw.github.com/lapop-central/materials_edu/main/LAPOP_AB_Merge_2018_v1.0.sav")
+lapop18 <- subset(lapop18, pais<=35)
+```
+
+Vamos a arrancar con las pruebas-t para muestras independientes y la prueba anova. Plantemos una hipótesis: se espera que aquellos ciudadanos y ciudadanas con un mayor nivel de confianza interpersonal también presentan mayor nivel de confianza en las instituciones. Veamos si esta hipótesis se confirma con una prueba t para muestras independientes, pero primero seleccionemos nuestras variables.
+
+```{r}
+table(lapop18$it1)
+```
+
+Si vemos el formulario, veremos 
+```{r}
+
+```
+
+
+4. Pruebas multivariadas
+
+
+
