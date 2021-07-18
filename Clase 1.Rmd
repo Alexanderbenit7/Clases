@@ -120,15 +120,73 @@ lapop18 <- import("https://raw.github.com/lapop-central/materials_edu/main/LAPOP
 lapop18 <- subset(lapop18, pais<=35)
 ```
 
-Vamos a arrancar con las pruebas-t para muestras independientes y la prueba anova. Plantemos una hipótesis: se espera que aquellos ciudadanos y ciudadanas con un mayor nivel de confianza interpersonal también presentan mayor nivel de confianza en las instituciones. Veamos si esta hipótesis se confirma con una prueba t para muestras independientes, pero primero seleccionemos nuestras variables.
+Vamos a arrancar con las pruebas-t para muestras independientes y la prueba anova. Plantemos una hipótesis: se espera que aquellos ciudadanos y ciudadanas con un mayor nivel de confianza interpersonal también presentan mayor nivel de apoyo al sistema político. Veamos si esta hipótesis se confirma con una prueba t para muestras independientes, pero primero seleccionemos nuestras variables.
+
+La medición está al revés:
+
+```{r}
+library(car)
+lapop18$it1=car::recode(lapop18$it1,"1=4; 2=3; 3=2; 4=1")
+```
+
+Por ahora lo dejamos así: confianza interpersonal
 
 ```{r}
 table(lapop18$it1)
 ```
 
-Si vemos el formulario, veremos 
-```{r}
+Pero vamos a recodificar esto. 1 y 2 serán 1; y 3 y 4 serán 2. Así hacemos intervalos:
 
+```{r}
+lapop18$it_dum = factor(ifelse(lapop18$it1 == 1 | lapop18$it1 == 2, 1,
+                                        ifelse(lapop18$it1 == 3 |
+                                                 lapop18$it1 == 4,2,0)))
+```
+
+```{r}
+lapop18$it_dum = factor(lapop18$it_dum, levels = c(1:2), labels = c("No confía","Confía"))
+```
+
+
+Ahora vamos con el apoyo al sistema político:
+
+```{r}
+lapop18$system = recode(lapop18$b6, "1:4=0 ; 5:7=100")
+```
+
+```{r}
+library(DescTools)
+LeveneTest(lapop18$system, lapop18$it_dum)
+```
+
+```{r prueba t 2}
+t.test(system ~ it_dum, data = lapop18, var.equal=T)
+```
+
+¿Y si utilizamos todas las categorías de la variable original?
+
+```{r}
+lapop18$it1 = factor(lapop18$it1, levels = c(1:4))
+```
+
+```{r}
+anova <- aov(lapop18$system~lapop18$it1)
+summary(anova)
+```
+
+```{r tukey}
+TukeyHSD(anova)
+```
+
+```{r plot Tukey}
+plot(TukeyHSD(anova))
+```
+
+*Ejercicio*: Saquemos la diferencia de promedios de "len" para los grupos "supp". Saquemos la diferencia de promedios para las diferentes "dose"
+
+```{r}
+tg <- ToothGrowth
+head(tg)
 ```
 
 
