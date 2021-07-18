@@ -127,6 +127,7 @@ La medición está al revés:
 ```{r}
 library(car)
 lapop18$it1=car::recode(lapop18$it1,"1=4; 2=3; 3=2; 4=1")
+lapop18$idio2=car::recode(lapop18$idio2,"1=3; 2=2; 3=1")
 ```
 
 Por ahora lo dejamos así: confianza interpersonal
@@ -148,7 +149,7 @@ lapop18$it_dum = factor(lapop18$it_dum, levels = c(1:2), labels = c("No confía"
 ```
 
 
-Ahora vamos con el apoyo al sistema político:
+Ahora vamos con el apoyo al sistema político: y otra forma de recodificar.
 
 ```{r}
 lapop18$system = recode(lapop18$b6, "1:4=0 ; 5:7=100")
@@ -163,7 +164,7 @@ LeveneTest(lapop18$system, lapop18$it_dum)
 t.test(system ~ it_dum, data = lapop18, var.equal=T)
 ```
 
-¿Y si utilizamos todas las categorías de la variable original?
+¿Y si utilizamos todas las categorías de la variable original? ¿Qué prueba tendriamos que usar?
 
 ```{r}
 lapop18$it1 = factor(lapop18$it1, levels = c(1:4))
@@ -189,8 +190,61 @@ tg <- ToothGrowth
 head(tg)
 ```
 
+4. Correlación y modelo lineal simple:
 
-4. Pruebas multivariadas
+Veamos si existe una asociación entre el apoyo a la democracia y la receptividad política. Es decir, si el hecho de que las personas consideren que los políticos/as se interesan por sus necesidades tiene una asociación con el apoyo a la democracia.
+
+```{r}
+modelo3 <- lm(lapop18$ing4 ~ lapop18$eff1)
+summary(modelo3)
+```
+
+Existe una asociación significativa? Se rechaza la H0 y se afirma la HA, concluyendo que sí existe relación entre las variables, aunque diríamos que el cambio es mucho o poco? Esto, además, nos dice poco sobre la fuerza de esta relación. 
+
+Veamos el cambio en desviaciones estandar:
+
+```{r correlacion}
+cor.test(x=lapop18$ing4, y=lapop18$eff1, method="pearson")
+```
+
+¿Cuál sería el cambio en desviaciones estandar entre las variables?
+
+*Ejercicio* Repliquemos el ejercicio para la receptividad política y la confianza en el congreso (b13)
+
+```{r}
+lapop18$idio2 = as.numeric(lapop18$idio2)
+lapop18$it1 = as.numeric(lapop18$it1)
+```
 
 
+5. Modelo de regresión lineal multiple
 
+Comparemos modelos. Si agr
+
+
+```{r ols multiple}
+modelo <- lm(ing4 ~ eff1 + it1, data=lapop18)
+summary(modelo)
+```
+
+Comparemos modelos. Si agregamos la variable (idio2) que mide el nivel de satisfacción de la persona con su situación económica con respecto al año previo, ¿qué modelo sería mejor en términos de explicación de varianza?
+
+```{r ols multiple}
+modelo <- lm(ing4 ~ eff1 + it1 + idio2, data=lapop18)
+summary(modelo)
+```
+
+Como sería el modelo en términos formales:
+
+Y = A + b(X1) + c(X2) + d(X3)
+
+Pero esto es poco útil dada la naturaleza de nuestras variables. Veamos los coeficientes estandarizados.
+
+```{r estandar}
+library(jtools)
+summ(modelo, scale=T)
+```
+
+¿Qué variable independiente tiene mayor impactos sobre la dependiente?
+
+*Ejecicio* Agreguemos una variable al modelo, comparemos el ajuste en términos de varianza y veamos si el orden de peso de las variables independientes sobre la dependiente cambia.
